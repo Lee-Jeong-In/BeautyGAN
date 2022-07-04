@@ -160,38 +160,36 @@ class Main(QDialog):
 
 
     def action_start(self):         # tensorflow를 사용한 이미지 처리 함수
+        # tensorflow ver =2.xx ->ver 1.xx
         tf.compat.v1.disable_eager_execution()
-
         tf.compat.v1.reset_default_graph()
 
+        # tensorflow initializer()
         sess = tf.compat.v1.Session()
-        sess.run(tf.compat.v1.global_variables_initializer())    #tensorflow initializer()
+        sess.run(tf.compat.v1.global_variables_initializer())
         graph = tf.compat.v1.get_default_graph()
 
-    #    saver = tf.compat.v1.train.import_meta_graph(os.path.join('model', 'model.meta'))     # 학습된 GAN 가져오기
+        # 학습된 GAN 가져오기
         saver = tf.compat.v1.train.import_meta_graph('C:/Users/ADMIN/Desktop/BeautyGAN-master/model/model.meta')
-    #    saver.restore(sess, tf.compat.v1.train.latest_checkpoint('model'))
         saver.restore(sess, tf.compat.v1.train.latest_checkpoint('C:/Users/ADMIN/Desktop/BeautyGAN-master/model'))
 
-
-        X = graph.get_tensor_by_name('X:0')
-        Y = graph.get_tensor_by_name('Y:0')
-        Xs = graph.get_tensor_by_name('generator/xs:0')
-
+        X = graph.get_tensor_by_name('X:0') #source
+        Y = graph.get_tensor_by_name('Y:0') #reference
+        Xs = graph.get_tensor_by_name('generator/xs:0') #output
 
         ######  Image    ####
 
         img_size = 256
 
-        no_makeup = cv2.resize(imageio.v2.imread(self.nomakeup[self.selection_list[1]]), (img_size, img_size))
-        X_img_expand = np.expand_dims(no_makeup,0)
-        X_img = np.reshape(X_img_expand, (1, 256, 256, 3))
-
         makeup = cv2.resize(imageio.v2.imread(self.figures[self.selection_list[0]]), (img_size, img_size))
         Y_img_expand = np.expand_dims(makeup,0)
         Y_img = np.reshape(Y_img_expand,(1, 256, 256, 3))
 
+        no_makeup = cv2.resize(imageio.v2.imread(self.nomakeup[self.selection_list[1]]), (img_size, img_size))
+        X_img_expand = np.expand_dims(no_makeup,0)
+        X_img = np.reshape(X_img_expand, (1, 256, 256, 3))
 
+        # 연산 수행
         output = sess.run(Xs, feed_dict={
             X: X_img,
             Y: Y_img
